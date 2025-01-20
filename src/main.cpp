@@ -1,9 +1,11 @@
 #include <Arduino.h>
 
-
+#include <iostream>
+#include <thread>
+using namespace std;
 //specification notes: 
 // two digital outputs (LED's)
-// signal A (DATA), signal B (sync)
+// signal A (DATA), signal B (SYNC)
 
 // two digital inputs (buttons) - Note buttons should not be required to be held down to update state
 // OUTPUT_ENABLE @ PB1 & OUTPUT_SELECT @ PB2
@@ -12,7 +14,7 @@
 
 // timing variable for PRODUCTION or DEBUG
 // Debug mode slows parameters by factor of 1000
-// Conditional code compile
+// *Conditional code compile*
 
 //normal output timing parameters
   //DataPeriodOn1 (A) period On seems to be multiplied by number of signals starting at 1 leadgin up to C
@@ -35,12 +37,135 @@
   //  8%4+1 = 1
   //Option 1: removes final three pulses from waveform 
 
+//define if program will compile in production or debug 
+#define PRODUCTION false
+
+const float DataPeriodOff = 0.9*(10^-3); //0.9mS
+const int NumPulses = 16;
+const float DataPeriodOffFinal = 500*(10^-6); //500uS
+
+const float DataPeriodOn1 = 0.4*(10^-3);
+float DataPeriodOn[];
+
+const float SyncPeriodOn = 50*(10^-6);
+//OUTPUT_ENABLE True if enabled, false if disabled
+bool OUTPUT_ENABLE = false; 
+//OUTPUT_SELECT true if normal and false if alternative 
+bool OUTPUT_SELECT = true;
+
+//push button pin numbers
+const int PB1 = 11; //OUTPUT_ENABLE
+const int PB2 = 12; //OUTPUT_SELECT
+//button states to remember state from previous loop
+bool ButtonState1 = false;
+bool ButtonState2 = false;
+
+//signal pin numbers
+const int SignalA = 21; //DATA
+const int SignalB = 22; //SYNC
+
+void syncOutput(){}
+
+void dataOutput(){
+  while (true){
+    Serial.print("output enable: ");
+    Serial.println(OUTPUT_ENABLE);
+    
+    //pulse SYNC at the start of period
+    digitalWrite(SignalB, HIGH);
+    delay(SyncPeriodOn);
+    digitalWrite(SignalB, LOW);
+    
+    
+    //normal mode
+    if (OUTPUT_SELECT){ 
+      for (int n=1; n<NumPulses; n++){ 
+          //LED on for DataPeriodOn
+          if(OUTPUT_ENABLE){digitalWrite(SignalA, HIGH);} //Only make data pin high if OUTPUT_ENABLE high
+          delay(DataPeriodOn[n]);
+          digitalWrite(SignalA, LOW);
+          //delay between pulses
+          delay(DataPeriodOff);
+        
+      } 
+      //delay between end of pulses and start of next period
+      delay(DataPeriodOffFinal);
+    }
+    //alternative mode
+    else{
+          //dont play final three pulses
+        for (int n=1; n<NumPulses-3; n++){    
+          //LED on for DataPeriodOn
+          if(OUTPUT_ENABLE){digitalWrite(SignalA, HIGH);} //Only make data pin high if OUTPUT_ENABLE high
+          delay(DataPeriodOn[n]);
+          digitalWrite(SignalA, LOW);
+          //delay between pulses
+          delay(DataPeriodOff);
+        } 
+        //delay between end of pulses and start of next period
+        delay(DataPeriodOffFinal);
+    }
+    
+  }
+}
 void setup() {
-  // put your setup code here, to run once:
- 
+
+  //calculate all DataPeriodOn's for NumPulses  
+  for (int n=1; n<NumPulses; n++){
+    DataPeriodOn[n] = DataPeriodOn1 + (n-1)*(50*(10^-6));
+  }  
+
+  //initiate push buttons
+  pinMode(PB1, INPUT);
+  pinMode(PB2, INPUT);
+
+  //initiate signal lines
+  pinMode(SignalA, OUTPUT);
+  pinMode(SignalB, OUTPUT);
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+
+  //start data output on a different thread (asynchrenously) from main loop 
+  thread dataOutputThread(dataOutput);
+
+  //if button 1 pushed 
+  if (digitalRead(PB1)){
+    //if button wasnt already pressed last time around 
+    if (!ButtonState1){
+      //flip state of OUTPUT_ENABLE
+      OUTPUT_ENABLE = !OUTPUT_ENABLE;
+      ButtonState1=true;
+      //print message on serial 
+      Serial.print("Button 1 pressed"); //serial.print may not be asynchrenous 
+      Serial.println(OUTPUT_ENABLE);
+    }
+  }
+  //if button isnt pushed 
+  else{  
+    //button pressed = false
+    ButtonState1=false;
+  }
+
+  //if button 2 pushed 
+  if (digitalRead(PB2)){
+    //if button wasnt already pressed last time around 
+    if (!ButtonState2){
+      //flip state of OUTPUT_SELECT
+      OUTPUT_SELECT = !OUTPUT_SELECT;
+      ButtonState2=true;
+      //print message on serial 
+      Serial.print("Button 2 pressed"); //serial.print may not be asynchrenous 
+      Serial.println(OUTPUT_SELECT);
+    }
+  }
+  //if button isnt pushed 
+  else{  
+    //button pressed = false
+    ButtonState2=false;
+  }
+
+
 }
+  
 
