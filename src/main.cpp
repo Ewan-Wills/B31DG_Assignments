@@ -3,6 +3,7 @@
 #include <iostream>
 #include <thread>
 using namespace std;
+#include <list>
 //specification notes: 
 // two digital outputs (LED's)
 // signal A (DATA), signal B (SYNC)
@@ -40,14 +41,15 @@ using namespace std;
 //define if program will compile in production or debug 
 #define PRODUCTION false
 
-const float DataPeriodOff = 0.9*(10^-3); //0.9mS
 const int NumPulses = 16;
-const float DataPeriodOffFinal = 500*(10^-6); //500uS
 
-const float DataPeriodOn1 = 0.4*(10^-3);
-float DataPeriodOn[];
+int DataPeriodOn[NumPulses+1];
 
-const float SyncPeriodOn = 50*(10^-6);
+int DataPeriodOff;
+int DataPeriodOffFinal; 
+int DataPeriodOn1;
+int SyncPeriodOn;
+  
 //OUTPUT_ENABLE True if enabled, false if disabled
 bool OUTPUT_ENABLE = false; 
 //OUTPUT_SELECT true if normal and false if alternative 
@@ -73,7 +75,7 @@ void dataOutput(){
     
     //pulse SYNC at the start of period
     digitalWrite(SignalB, HIGH);
-    delay(SyncPeriodOn);
+    delayMicroseconds(SyncPeriodOn);
     digitalWrite(SignalB, LOW);
     
     
@@ -82,14 +84,14 @@ void dataOutput(){
       for (int n=1; n<NumPulses; n++){ 
           //LED on for DataPeriodOn
           if(OUTPUT_ENABLE){digitalWrite(SignalA, HIGH);} //Only make data pin high if OUTPUT_ENABLE high
-          delay(DataPeriodOn[n]);
+          delayMicroseconds(DataPeriodOn[n]);
           digitalWrite(SignalA, LOW);
           //delay between pulses
-          delay(DataPeriodOff);
+          delayMicroseconds(DataPeriodOff);
         
       } 
       //delay between end of pulses and start of next period
-      delay(DataPeriodOffFinal);
+      delayMicroseconds(DataPeriodOffFinal);
     }
     //alternative mode
     else{
@@ -97,23 +99,42 @@ void dataOutput(){
         for (int n=1; n<NumPulses-3; n++){    
           //LED on for DataPeriodOn
           if(OUTPUT_ENABLE){digitalWrite(SignalA, HIGH);} //Only make data pin high if OUTPUT_ENABLE high
-          delay(DataPeriodOn[n]);
+          delayMicroseconds(DataPeriodOn[n]);
           digitalWrite(SignalA, LOW);
           //delay between pulses
-          delay(DataPeriodOff);
+          delayMicroseconds(DataPeriodOff);
         } 
         //delay between end of pulses and start of next period
-        delay(DataPeriodOffFinal);
+        delayMicroseconds(DataPeriodOffFinal);
     }
     
   }
 }
 void setup() {
+  //all values in microseconds
+  if (PRODUCTION){
+    
+    const int DataPeriodOff = 900; //0.9mS
+    
+    DataPeriodOffFinal = 500; //500uS
+    DataPeriodOn1 = 400; //uS
+    SyncPeriodOn = 50;//50uS
 
-  //calculate all DataPeriodOn's for NumPulses  
-  for (int n=1; n<NumPulses; n++){
-    DataPeriodOn[n] = DataPeriodOn1 + (n-1)*(50*(10^-6));
-  }  
+    //calculate all DataPeriodOn's for NumPulses for PRODUCTION
+    for (int n=1; n<NumPulses; n++){
+      DataPeriodOn[n] = DataPeriodOn1 + (n-1)*(50*(10^-6));
+    }      
+  }else{
+    DataPeriodOff = 900*1000; //0.9S
+    DataPeriodOffFinal = 500*1000; //500mS
+    DataPeriodOn1 = 400*1000;//mS
+    SyncPeriodOn = 50*1000;//50mS
+
+    //calculate all DataPeriodOn's for NumPulses *1000 for DEBUG
+    for (int n=1; n<NumPulses; n++){
+      DataPeriodOn[n] = DataPeriodOn1 + (n-1)*(50*(10^-3));
+    }  
+  }
 
   //initiate push buttons
   pinMode(PB1, INPUT);
