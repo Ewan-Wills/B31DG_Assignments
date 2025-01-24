@@ -66,66 +66,53 @@ bool ButtonState2 = false;
 const int SignalA = 32; //DATA -- red
 const int SignalB = 33; //SYNC -- green
 
-void syncOutput(){}
+void ayncDelayMicroseconds(int numDelay){
+  //delay() and delayMicroseconds dont work async
+  //vTaskDelay(pdMS_TO_TICKS()); doesnt work with microseconds
+
+  //use esp builtin timer to delay for set amount of time
+  uint64_t microseconds = esp_timer_get_time();
+  if (numDelay!=0){
+      while (((uint64_t) esp_timer_get_time() - microseconds) <= numDelay){}
+  }
+}
 
 void dataOutput(void *){
   while (true){    
     //pulse SYNC at the start of period
     digitalWrite(SignalB, HIGH);
-    //delayMicroseconds(SyncPeriodOn);
-    vTaskDelay(pdMS_TO_TICKS(SyncPeriodOn)/1000); 
+    ayncDelayMicroseconds(SyncPeriodOn);
     digitalWrite(SignalB, LOW);
     
     
     //normal mode
     
       for (int n=1; n<=NumPulses; n++){ 
-          //LED on for DataPeriodOn
+          
+          //alternative mode. Remove final three pulses
           if (OUTPUT_SELECT ){
-            if (n>NumPulses-3){ // >= will stop at 12, > will stop at 13. removing final three means to reoves 16,15,14th pulses.
-              Serial.println("break");
+            if (n>NumPulses-3){ //Note >= will stop at 12, > will stop at 13.
+
               break;
             }
           }
           if(OUTPUT_ENABLE){digitalWrite(SignalA, HIGH);} //Only make data pin high if OUTPUT_ENABLE high
 
-          Serial.println(n);
-          vTaskDelay(pdMS_TO_TICKS(DataPeriodOn[n])/1000);           
+          ayncDelayMicroseconds(DataPeriodOn[n]);        
           digitalWrite(SignalA, LOW);
           //delay between pulses
-          vTaskDelay(pdMS_TO_TICKS(DataPeriodOff)/1000); 
+          ayncDelayMicroseconds(DataPeriodOff);
         
       } 
       //delay between end of pulses and start of next period
-      //delayMicroseconds(DataPeriodOffFinal);
 
-      vTaskDelay(pdMS_TO_TICKS(DataPeriodOffFinal)/1000); 
-    
-    
-    //alternative mode
-    // else{
-    //       //dont play final three pulses
-    //     for (int n=1; n<=(NumPulses-3); n++){    
-    //       //LED on for DataPeriodOn
-    //       if(OUTPUT_ENABLE){digitalWrite(SignalA, HIGH);} //Only make data pin high if OUTPUT_ENABLE high
-    //       //delayMicroseconds(DataPeriodOn[n]);
-    //       vTaskDelay(pdMS_TO_TICKS(DataPeriodOn[n])/1000); 
-
-
-    //       digitalWrite(SignalA, LOW);
-    //       //delay between pulses
-    //       //delayMicroseconds(DataPeriodOff);
-    //       vTaskDelay(pdMS_TO_TICKS(DataPeriodOff)/1000); 
-    //     } 
-    //     //delay between end of pulses and start of next period
-    //     //delayMicroseconds(DataPeriodOffFinal);
-    //     vTaskDelay(pdMS_TO_TICKS(DataPeriodOffFinal)/1000); 
-    // }
-    
+      ayncDelayMicroseconds(DataPeriodOffFinal); 
+        
   }
 }
 void setup() {
   Serial.begin(115200);
+  Serial.println(""); 
   //all values in microseconds
   if (PRODUCTION){
     
@@ -141,7 +128,8 @@ void setup() {
       Serial.print("Generated PRODUCTION: DataPeriodOn[");
       Serial.print(n);
       Serial.print("]: ");
-      Serial.println(DataPeriodOn[n]);
+      Serial.print(DataPeriodOn[n]);
+      Serial.println("uS");
     }  
 
   }else{
@@ -157,9 +145,21 @@ void setup() {
       Serial.print("Generated DEBUG: DataPeriodOn[");
       Serial.print(n);
       Serial.print("]: ");
-      Serial.println(DataPeriodOn[n]);
+      Serial.print(DataPeriodOn[n]);
+      Serial.println("uS");
     }  
   }
+  Serial.println(""); 
+  Serial.print("SyncPeriodOn: ");
+  Serial.print(SyncPeriodOn);
+  Serial.println("uS");
+  Serial.print("DataPeriodOff: ");
+  Serial.print(DataPeriodOff);
+  Serial.println("uS");
+  Serial.print("DataPeriodOffFinal: ");
+  Serial.print(DataPeriodOffFinal);
+  Serial.println("uS");
+
   delay(100);
 
 
@@ -180,8 +180,7 @@ void loop() {
 
   //start data output on a different thread (asynchrenously) from main loop 
   //thread dataOutputThread(dataOutput);
-
-  xTaskCreatePinnedToCore(dataOutput, "dataOutput", 4096, NULL, 1, NULL, 1);
+  xTaskCreatePinnedToCore(dataOutput, "dataOutput", 4096, NULL, 1, NULL,1);
 
   //if button 1 pushed 
   if (digitalRead(PB1)){
