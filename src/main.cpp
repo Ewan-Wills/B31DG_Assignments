@@ -89,13 +89,9 @@ void dataOutput(void *){
     
       for (int n=1; n<=NumPulses; n++){ 
           
-          //alternative mode. Remove final three pulses
-          if (OUTPUT_SELECT ){
-            if (n>NumPulses-3){ //Note >= will stop at 12, > will stop at 13.
-
-              break;
-            }
-          }
+        if ((OUTPUT_SELECT) && (n>NumPulses-3)){//Note >= will stop at 12, > will stop at 13.                  
+        }else{
+          
           if(OUTPUT_ENABLE){digitalWrite(SignalA, HIGH);} //Only make data pin high if OUTPUT_ENABLE high
 
           ayncDelayMicroseconds(DataPeriodOn[n]);        
@@ -160,7 +156,7 @@ void setup() {
   Serial.print(DataPeriodOffFinal);
   Serial.println("uS");
 
-  delay(100);
+  
 
 
   //initiate push buttons
@@ -180,7 +176,7 @@ void loop() {
 
   //start data output on a different thread (asynchrenously) from main loop 
   //thread dataOutputThread(dataOutput);
-  xTaskCreatePinnedToCore(dataOutput, "dataOutput", 4096, NULL, 1, NULL,1);
+  xTaskCreatePinnedToCore(dataOutput, "dataOutput", 4096, NULL, 1, NULL,0);
 
   //if button 1 pushed 
   if (digitalRead(PB1)){
