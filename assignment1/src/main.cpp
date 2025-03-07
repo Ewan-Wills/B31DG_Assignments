@@ -39,7 +39,7 @@ using namespace std;
 //   Option 1: removes final three pulses from waveform 
 
 //define if program will compile in production or debug 
-#define PRODUCTION false
+#define PRODUCTION true
 
 const int NumPulses = 16;
 
@@ -66,18 +66,22 @@ bool ButtonState2 = false;
 const int SignalA = 32; //DATA -- red
 const int SignalB = 33; //SYNC -- green
 
-void ayncDelayMicroseconds(int numDelay){
+void ayncDelayMicroseconds(int64_t numDelay){
   //delay() and delayMicroseconds dont work async
   //vTaskDelay(pdMS_TO_TICKS()); doesnt work with microseconds
-
+  //Serial.println(numDelay);
   //use esp builtin timer to delay for set amount of time
-  uint64_t microseconds = esp_timer_get_time();
+  
+  int64_t microseconds = esp_timer_get_time();
   if (numDelay!=0){
-      while (((uint64_t) esp_timer_get_time() - microseconds) <= numDelay){}
+      while (((int64_t) esp_timer_get_time() - microseconds) <= numDelay){}
   }
+
+  //ets_delay_us(numDelay);
 }
 
 void dataOutput(void *){
+  int currentNumPulses;
   while (true){    
     //pulse SYNC at the start of period
     digitalWrite(SignalB, HIGH);
@@ -98,11 +102,10 @@ void dataOutput(void *){
           digitalWrite(SignalA, LOW);
           //delay between pulses
           ayncDelayMicroseconds(DataPeriodOff);
-        
-      } 
-      //delay between end of pulses and start of next period
-
-      ayncDelayMicroseconds(DataPeriodOffFinal); 
+        }
+    }   
+    //delay between end of pulses and start of next period
+    ayncDelayMicroseconds(DataPeriodOffFinal); 
         
   }
 }
@@ -170,6 +173,11 @@ void setup() {
 
   digitalWrite(SignalA, LOW);
   digitalWrite(SignalB, LOW);
+
+  //start data output on a different thread (asynchrenously) from main loop 
+  //thread dataOutputThread(dataOutput);
+  xTaskCreatePinnedToCore(dataOutput, "dataOutput", 4096, NULL, 1, NULL,0);
+
 }
 
 void loop() {
