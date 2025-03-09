@@ -44,6 +44,7 @@ void tasks::doTask(int taskNum)
     monitor.jobEnded(taskNum);
 }
 // Output a digital signal. This should be HIGH for 250μs, then LOW for 50μs, then HIGH again for 300μs, then LOW again.
+//Takes 600uS
 void tasks::task1()
 {
     digitalWrite(outputPinTask1, HIGH);
@@ -55,6 +56,7 @@ void tasks::task1()
     digitalWrite(outputPinTask1, LOW);
 }
 // Output a second digital signal. This should be HIGH for 100μs, then LOW for 50μs, then HIGH again for 200μs, then LOW again
+//Takes 350uS
 void tasks::task2()
 {
     digitalWrite(outputPinTask2, HIGH);
@@ -66,16 +68,19 @@ void tasks::task2()
     digitalWrite(outputPinTask2, LOW);
 }
 // Measure the frequency of a 3.3v square wave signal
+//Takes 1000uS to 1500uS 
 void tasks::task3()
 {
     F1 = measureFreq(inputPinTask3);
 }
 // Measure the frequency of a 3.3v square wave signal
+//Takes 667uS to 1200uS
 void tasks::task4()
 {
     F2 = measureFreq(inputPinTask4);
 }
 // Call the monitor’s method doWork().
+//Takes 500uS
 void tasks::task5()
 {
     monitor.doWork();

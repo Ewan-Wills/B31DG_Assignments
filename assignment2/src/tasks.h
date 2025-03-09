@@ -27,7 +27,7 @@ private:
     void task7();
     int measureFreq(int pin); 
 public:   
-
+    
     B31DGCyclicExecutiveMonitor monitor;    
     tasks();
     void doTask(int taskNumber);
