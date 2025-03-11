@@ -1,7 +1,9 @@
 #include "tasks.h"
 
-tasks::tasks()
+tasks::tasks(B31DGCyclicExecutiveMonitor *monitor)
 {
+    _monitor = monitor;
+
     // initialise F1 and F2 so task 6 can recall values from taks 3 and 4
     this->F1 = 0;
     this->F2 = 0;
@@ -18,10 +20,11 @@ tasks::tasks()
     pinMode(inputPinTask4, INPUT);        // frequency input for task 4
     pinMode(inputPinTask7, INPUT_PULLUP); // button for task 7
 }
+
 void tasks::doTask(int taskNum)
 {
     //start the job on the monitor, run the task, then end the job on the monitor 
-    monitor.jobStarted(taskNum);
+    // _monitor->jobStarted(taskNum);
     switch (taskNum)
     {
     case 1:
@@ -41,66 +44,75 @@ void tasks::doTask(int taskNum)
 
     default: break;
     }
-    monitor.jobEnded(taskNum);
+    // _monitor->jobEnded(taskNum);
 }
 // Output a digital signal. This should be HIGH for 250μs, then LOW for 50μs, then HIGH again for 300μs, then LOW again.
 //Takes 600uS
 void tasks::task1()
 {
-    digitalWrite(outputPinTask1, HIGH);
-    delayMicroseconds(250);
-    digitalWrite(outputPinTask1, LOW);
-    delayMicroseconds(50);
-    digitalWrite(outputPinTask1, HIGH);
-    delayMicroseconds(300);
-    digitalWrite(outputPinTask1, LOW);
+    // Serial.println("TASK1");
+    delayMicroseconds(600);
+    // digitalWrite(outputPinTask1, HIGH);
+    // delayMicroseconds(250);
+    // digitalWrite(outputPinTask1, LOW);
+    // delayMicroseconds(50);
+    // digitalWrite(outputPinTask1, HIGH);
+    // delayMicroseconds(300);
+    // digitalWrite(outputPinTask1, LOW);
 }
 // Output a second digital signal. This should be HIGH for 100μs, then LOW for 50μs, then HIGH again for 200μs, then LOW again
 //Takes 350uS
 void tasks::task2()
 {
-    digitalWrite(outputPinTask2, HIGH);
-    delayMicroseconds(100);
-    digitalWrite(outputPinTask2, LOW);
-    delayMicroseconds(50);
-    digitalWrite(outputPinTask2, HIGH);
-    delayMicroseconds(200);
-    digitalWrite(outputPinTask2, LOW);
+    //Serial.println("TASK2");
+    delayMicroseconds(350);
+    // digitalWrite(outputPinTask2, HIGH);
+    // delayMicroseconds(100);
+    // digitalWrite(outputPinTask2, LOW);
+    // delayMicroseconds(50);
+    // digitalWrite(outputPinTask2, HIGH);
+    // delayMicroseconds(200);
+    // digitalWrite(outputPinTask2, LOW);
 }
 // Measure the frequency of a 3.3v square wave signal
 //Takes 1000uS to 1500uS 
 void tasks::task3()
 {
-    F1 = measureFreq(inputPinTask3);
+    //Serial.println("TASK3");
+    delayMicroseconds(1500);
+    //F1 = measureFreq(inputPinTask3);
 }
 // Measure the frequency of a 3.3v square wave signal
 //Takes 667uS to 1200uS
 void tasks::task4()
 {
-    F2 = measureFreq(inputPinTask4);
+    // Serial.println("TASK4");
+    delayMicroseconds(500);
+    //F2 = measureFreq(inputPinTask4);
 }
 // Call the monitor’s method doWork().
 //Takes 500uS
 void tasks::task5()
 {
-    monitor.doWork();
+    // Serial.println("TASK5");
+    delayMicroseconds(500);
+    //_monitor->doWork();
 }
+
 // Use an LED to indicate whether the sum of the two frequencies F1 and F2 is greater than 1500
 void tasks::task6()
 {
+    Serial.println("TASK6");
     // write pin high if sum of frequencies is greater than 1500. If equal or lower, write pin low.
     digitalWrite(outputPinTask6, (F1 + F2 > 1500));
 }
 // Monitor a pushbutton. Toggle the state of a second LED and call the monitor’s method doWork() whenever the pushbutton is pressed.
 void tasks::task7()
 {
-    if (digitalRead(inputPinTask7))
-    {
-        task7LedState = !task7LedState;
-        digitalWrite(outputPinTask7, task7LedState);
-        monitor.doWork();
-    }
-    
+    Serial.println("TASK7");
+    task7LedState = !task7LedState;
+    digitalWrite(outputPinTask7, task7LedState);
+    _monitor->doWork();    
 }
 
 int tasks::measureFreq(int pin)

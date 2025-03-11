@@ -26,10 +26,12 @@ private:
     void task6();
     void task7();
     int measureFreq(int pin); 
+    B31DGCyclicExecutiveMonitor *_monitor;
 public:   
+
+    tasks(B31DGCyclicExecutiveMonitor *monitor);
     
-    B31DGCyclicExecutiveMonitor monitor;    
-    tasks();
+    
     void doTask(int taskNumber);
     
 };
