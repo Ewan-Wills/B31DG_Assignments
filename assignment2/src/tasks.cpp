@@ -87,7 +87,7 @@ void tasks::task3()
 void tasks::task4()
 {
     // Serial.println("TASK4");
-    delayMicroseconds(500);
+    delayMicroseconds(1200);
     //F2 = measureFreq(inputPinTask4);
 }
 // Call the monitor’s method doWork().
