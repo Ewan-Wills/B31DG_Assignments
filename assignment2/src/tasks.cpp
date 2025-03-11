@@ -1,4 +1,6 @@
 #include "tasks.h"
+//create a boolean to hold whether the button was already pushed in the main loop
+bool buttonAlreadyPushed;
 
 tasks::tasks(B31DGCyclicExecutiveMonitor *monitor)
 {
@@ -9,6 +11,7 @@ tasks::tasks(B31DGCyclicExecutiveMonitor *monitor)
     this->F2 = 0;
     //
     this->task7LedState = false;
+
 
     //set modes for pins used
     pinMode(outputPinTask1, OUTPUT); // output for task 1
@@ -79,7 +82,7 @@ void tasks::task2()
 void tasks::task3()
 {
     //Serial.println("TASK3");
-    delayMicroseconds(1500);
+    delayMicroseconds(1000);
     //F1 = measureFreq(inputPinTask3);
 }
 // Measure the frequency of a 3.3v square wave signal
@@ -87,7 +90,7 @@ void tasks::task3()
 void tasks::task4()
 {
     // Serial.println("TASK4");
-    delayMicroseconds(1200);
+    delayMicroseconds(667);
     //F2 = measureFreq(inputPinTask4);
 }
 // Call the monitor’s method doWork().
@@ -102,17 +105,25 @@ void tasks::task5()
 // Use an LED to indicate whether the sum of the two frequencies F1 and F2 is greater than 1500
 void tasks::task6()
 {
-    Serial.println("TASK6");
     // write pin high if sum of frequencies is greater than 1500. If equal or lower, write pin low.
     digitalWrite(outputPinTask6, (F1 + F2 > 1500));
 }
 // Monitor a pushbutton. Toggle the state of a second LED and call the monitor’s method doWork() whenever the pushbutton is pressed.
 void tasks::task7()
 {
-    Serial.println("TASK7");
-    task7LedState = !task7LedState;
-    digitalWrite(outputPinTask7, task7LedState);
-    _monitor->doWork();    
+    //If button pressed (and wasnt already pressed since last loop), toggle led and doWork()
+    if (!digitalRead(inputPinTask7))
+    {
+        buttonAlreadyPushed = false;
+    }
+    if (digitalRead(inputPinTask7) && !buttonAlreadyPushed)
+    {
+        buttonAlreadyPushed = true;
+        task7LedState = !task7LedState;
+        digitalWrite(outputPinTask7, task7LedState);
+        _monitor->doWork();    
+    }
+
 }
 
 int tasks::measureFreq(int pin)
