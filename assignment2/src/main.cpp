@@ -2,8 +2,11 @@
 #include <tasks.h> //Note: tasks.h includes B31DGMonitor and Arduino headers
 #include <Ticker.h>
 
+//number of tasks including 6 and 7. Note that NUMBER_TASKS from B31DGMonitor.h is 5
+#define NUMTASKS 7
+
 // create a list to hold task deadline lengths (uS). Note: there is no deadline required for task 6 and 7 they are set to 1000 so they can be run every frame (they ar both usualy pretty quick but 7 can take 500uS if button is pressed)
-int deadlineLengths[7] = {4000, 3000, 10000, 10000, 5000, 1000, 1000};
+int deadlineLengths[NUMTASKS] = {4000, 3000, 10000, 10000, 5000, 1000, 1000};
 
 // create a object to hold task number and time-to-deadline
 struct queueTask
@@ -14,7 +17,7 @@ struct queueTask
 //counter integer
 int counter;
 // create a list to hold all of the tasks and their time of deadlines
-queueTask queue[7];
+queueTask queue[NUMTASKS];
 
 // integer for schedule to hold the task with the earlieset deadline (if -1, no tasks)
 int taskToRun;
@@ -65,6 +68,7 @@ void updateQueue(int count)
     if (count % 5 == 0)
     {
         addToQueue(5);
+
     }
 }
 //callback function for ticker object
@@ -80,7 +84,7 @@ int getPriority()
     //returns -1 if no tasks in queue 
     taskToRun = -1;
     //iterate through queue
-    for (int i = 1; i <= 7; i++)
+    for (int i = 1; i <= NUMTASKS; i++)
     {
         // .runTask is a boolean. If true we are supposed to run the task if its false we ignore it
         //Note: i is the task number, the index of queue for that task is i-1 
@@ -120,11 +124,11 @@ void setup()
     // activate the monitor
     monitor->startMonitoring();
 
-    // Initially, Add all the tasks to the queue. 
-    // for (int i = 1; i <= 7; i++)
-    // {
-    //     addToQueue(i);
-    // }
+    //Initially, Add all the tasks to the queue. (This is just to make the monitor show even numbers (2500,3334,1000 etc...)) 
+    for (int i = 1; i <= NUMTASKS; i++)
+    {
+        addToQueue(i);
+    }
 
     // Create ticker with 1ms tick period
     ticker.attach_ms(1, &tickerFunc);
@@ -143,8 +147,6 @@ void loop()
         queue[taskToRun - 1].runTask = false;
 
         // start job in monitor and
-        monitor->jobStarted(taskToRun);
         task->doTask(taskToRun);
-        monitor->jobEnded(taskToRun);
     }
 }

@@ -1,7 +1,7 @@
 #include "tasks.h"
 //create a boolean to hold whether the button was already pushed in the main loop
 bool buttonAlreadyPushed;
-
+  
 tasks::tasks(B31DGCyclicExecutiveMonitor *monitor)
 {
     _monitor = monitor;
@@ -9,7 +9,6 @@ tasks::tasks(B31DGCyclicExecutiveMonitor *monitor)
     // initialise F1 and F2 so task 6 can recall values from taks 3 and 4
     this->F1 = 0;
     this->F2 = 0;
-    //
     this->task7LedState = false;
 
 
@@ -24,10 +23,21 @@ tasks::tasks(B31DGCyclicExecutiveMonitor *monitor)
     pinMode(inputPinTask7, INPUT_PULLUP); // button for task 7
 }
 
+void tasks::ayncDelayMicroseconds(int numDelay){
+    //delay() and delayMicroseconds dont work async
+    //vTaskDelay(pdMS_TO_TICKS()); doesnt work with microseconds
+    delayMicroseconds(numDelay);
+    //use esp builtin timer to delay for set amount of time
+    // uint64_t microseconds = esp_timer_get_time();
+    // if (numDelay!=0){
+    //     while (((uint64_t) esp_timer_get_time() - microseconds) <= numDelay){}
+    // }
+  }
+
 void tasks::doTask(int taskNum)
 {
     //start the job on the monitor, run the task, then end the job on the monitor 
-    // _monitor->jobStarted(taskNum);
+    if(taskNum<=5){ _monitor->jobStarted(taskNum);}
     switch (taskNum)
     {
     case 1:
@@ -47,64 +57,59 @@ void tasks::doTask(int taskNum)
 
     default: break;
     }
-    // _monitor->jobEnded(taskNum);
+    if(taskNum<=5){_monitor->jobEnded(taskNum);}
 }
 // Output a digital signal. This should be HIGH for 250μs, then LOW for 50μs, then HIGH again for 300μs, then LOW again.
 //Takes 600uS
 void tasks::task1()
 {
-    // Serial.println("TASK1");
-    delayMicroseconds(600);
-    // digitalWrite(outputPinTask1, HIGH);
-    // delayMicroseconds(250);
-    // digitalWrite(outputPinTask1, LOW);
-    // delayMicroseconds(50);
-    // digitalWrite(outputPinTask1, HIGH);
-    // delayMicroseconds(300);
-    // digitalWrite(outputPinTask1, LOW);
+    //ayncDelayMicroseconds(600);
+    digitalWrite(outputPinTask1, HIGH);
+    ayncDelayMicroseconds(250);
+    digitalWrite(outputPinTask1, LOW);
+    ayncDelayMicroseconds(50);
+    digitalWrite(outputPinTask1, HIGH);
+    ayncDelayMicroseconds(300);
+    digitalWrite(outputPinTask1, LOW);
 }
 // Output a second digital signal. This should be HIGH for 100μs, then LOW for 50μs, then HIGH again for 200μs, then LOW again
 //Takes 350uS
 void tasks::task2()
 {
-    //Serial.println("TASK2");
-    delayMicroseconds(350);
-    // digitalWrite(outputPinTask2, HIGH);
-    // delayMicroseconds(100);
-    // digitalWrite(outputPinTask2, LOW);
-    // delayMicroseconds(50);
-    // digitalWrite(outputPinTask2, HIGH);
-    // delayMicroseconds(200);
-    // digitalWrite(outputPinTask2, LOW);
+    ayncDelayMicroseconds(350);
+    digitalWrite(outputPinTask2, HIGH);
+    ayncDelayMicroseconds(100);
+    digitalWrite(outputPinTask2, LOW);
+    ayncDelayMicroseconds(50);
+    digitalWrite(outputPinTask2, HIGH);
+    ayncDelayMicroseconds(200);
+    digitalWrite(outputPinTask2, LOW);
 }
 // Measure the frequency of a 3.3v square wave signal
 //Takes 1000uS to 1500uS 
 void tasks::task3()
 {
-    //Serial.println("TASK3");
-    delayMicroseconds(1000);
+    ayncDelayMicroseconds(1000);
     //F1 = measureFreq(inputPinTask3);
 }
 // Measure the frequency of a 3.3v square wave signal
 //Takes 667uS to 1200uS
 void tasks::task4()
 {
-    // Serial.println("TASK4");
-    delayMicroseconds(667);
+    ayncDelayMicroseconds(667);
     //F2 = measureFreq(inputPinTask4);
 }
 // Call the monitor’s method doWork().
 //Takes 500uS
 void tasks::task5()
 {
-    // Serial.println("TASK5");
-    delayMicroseconds(500);
-    //_monitor->doWork();
+    _monitor->doWork();
 }
 
 // Use an LED to indicate whether the sum of the two frequencies F1 and F2 is greater than 1500
 void tasks::task6()
 {
+    //ayncDelayMicroseconds(10);
     // write pin high if sum of frequencies is greater than 1500. If equal or lower, write pin low.
     digitalWrite(outputPinTask6, (F1 + F2 > 1500));
 }
@@ -112,46 +117,44 @@ void tasks::task6()
 void tasks::task7()
 {
     //If button pressed (and wasnt already pressed since last loop), toggle led and doWork()
-    if (!digitalRead(inputPinTask7))
+    //ayncDelayMicroseconds(10);
+    if (digitalRead(inputPinTask7))
     {
         buttonAlreadyPushed = false;
     }
-    if (digitalRead(inputPinTask7) && !buttonAlreadyPushed)
-    {
-        buttonAlreadyPushed = true;
-        task7LedState = !task7LedState;
-        digitalWrite(outputPinTask7, task7LedState);
-        _monitor->doWork();    
+    else {
+        if(!buttonAlreadyPushed){
+            buttonAlreadyPushed = true;
+            task7LedState = !task7LedState;
+            digitalWrite(outputPinTask7, task7LedState);
+            _monitor->doWork();    
+        }
     }
 
 }
 
 int tasks::measureFreq(int pin)
 {
-    long currentTime;
-    long differenceTime;
-    // if pin is high, wait for pin to be low
-    if (digitalRead(pin))
-    {
-        while (digitalRead(pin))
-            ;
+    int startTime;
+    int endTime;
+    int period;
+
+    //if pin high, wait for pin to be low, start timer and end timer when high again. This is half the period
+    if (digitalRead(pin)) { 
+        while (digitalRead(pin)); 
+        startTime = micros();
+        while (!digitalRead(pin));
     }
-    // if pin was low, wait for pin to be high. If pin was high it would have waited and now is low.
+    //if pin low, wait for pin to be high, start timer and end timer when low again. This is half the period
+    else{
+        while (!digitalRead(pin)); 
+        startTime = micros();
+        while (digitalRead(pin));
+    }
 
-    while (!digitalRead(pin))
-        ;
-    // This ensures we are getting the time at the rising edge of pulse.
-    currentTime = micros();
-    // wait while the signal is high
-    while (digitalRead(pin))
-        ;
-    // wait while the signal is low
-    while (!digitalRead(pin))
-        ;
+    // Find difference between now and start time. Since we know wave is 50% duty cycle, this (the difference) will be half of the period. Multiply by two to get the period
+    period = 2*(micros() - startTime);
 
-    // calculate time since rising edge of signal. this is the period of the signal
-    differenceTime = (micros() - currentTime);
-
-    // return the inverse of the period (i.e. frequency). Round the frequency to integer and cast back to long
-    return ((int)round(1 / differenceTime));
+    // return the inverse of the period (i.e. frequency). Round the frequency to integer
+    return ((int) round(1 / period));
 };

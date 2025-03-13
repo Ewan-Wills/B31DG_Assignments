@@ -3,13 +3,15 @@
 #include <B31DGMonitor.h>
 
 //define pins 
-#define outputPinTask1 16
-#define outputPinTask2 17
-#define inputPinTask3 18
-#define inputPinTask4 19
-#define outputPinTask6 20
-#define inputPinTask7 21
-#define outputPinTask7 22
+#define outputPinTask1 12
+#define outputPinTask2 14
+#define outputPinTask6 27
+#define outputPinTask7 26
+
+#define inputPinTask3 25
+#define inputPinTask4 33
+#define inputPinTask7 32
+
 
 //create 
 class tasks
@@ -25,13 +27,10 @@ private:
     void task5();
     void task6();
     void task7();
-    int measureFreq(int pin); 
+    int measureFreq(int pin);    
     B31DGCyclicExecutiveMonitor *_monitor;
 public:   
-
     tasks(B31DGCyclicExecutiveMonitor *monitor);
-    
-    
     void doTask(int taskNumber);
-    
+    void ayncDelayMicroseconds(int delay_us); 
 };
