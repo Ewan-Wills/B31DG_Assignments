@@ -10,6 +10,4 @@
 
 
 
-// number of tasks including 6 and 7. Note that NUMBER_TASKS from B31DGMonitor.h is 5
-#define NUMTASKS 7
 

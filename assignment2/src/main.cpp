@@ -1,5 +1,7 @@
 #include "main.h"
 
+// number of tasks including 6 and 7. Note that NUMBER_TASKS from B31DGMonitor.h is 5
+#define NUMTASKS 7
 // create a list to hold task deadline lengths (uS). Note: there is no deadline required for task 6 and 7 they are set to 10,000
 const int deadlineLengths[NUMTASKS] = {4000, 3000, 10000, 10000, 5000, 10000, 10000};
 TimerHandle_t myTimer[NUMTASKS];      // FreeRTOS timer handle
@@ -149,41 +151,40 @@ void loop()
 // First Program. Implement Cyclic Excecutive
 #include <Ticker.h>
 #define hyperperiod 30
-#define tasksInFrame 5
+#define tasksInFrame 7
 #define tickerPeriod 2000
 // copy and pasted from excel
 int schedule[(hyperperiod)*tasksInFrame] = {
-    1,	1,	0,	0,	1,
-0,	0,	0,	0,	0,
-1,	1,	0,	0,	0,
-0,	1,	0,	1,	1,
-1,	0,	1,	0,	0,
-0,	1,	0,	0,	1,
-1,	1,	0,	0,	0,
-0,	0,	0,	0,	0,
-1,	1,	0,	1,	1,
-0,	1,	1,	0,	0,
-1,	0,	0,	0,	1,
-0,	1,	0,	0,	0,
-1,	1,	0,	0,	0,
-0,	0,	0,	1,	1,
-1,	1,	1,	0,	0,
-0,	1,	0,	0,	1,
-1,	0,	0,	0,	0,
-0,	1,	0,	0,	0,
-1,	1,	0,	1,	1,
-0,	0,	1,	0,	0,
-1,	1,	0,	0,	1,
-0,	1,	0,	0,	0,
-1,	0,	0,	0,	0,
-0,	1,	0,	1,	1,
-1,	1,	1,	0,	0,
-0,	0,	0,	0,	1,
-1,	1,	0,	0,	0,
-0,	1,	0,	0,	0,
-1,	0,	0,	1,	1,
-0,	1,	1,	0,	0,
-
+    1,	1,	0,	0,	1,	0,	0,
+0,	0,	0,	0,	0,	0,	0,
+1,	1,	0,	0,	0,	0,	0,
+0,	1,	0,	1,	1,	0,	0,
+1,	0,	1,	0,	0,	0,	0,
+0,	1,	0,	0,	1,	1,	1,
+1,	1,	0,	0,	0,	0,	0,
+0,	0,	0,	0,	0,	0,	0,
+1,	1,	0,	1,	1,	0,	0,
+0,	1,	1,	0,	0,	0,	0,
+1,	0,	0,	0,	1,	0,	0,
+0,	1,	0,	0,	0,	1,	1,
+1,	1,	0,	0,	0,	0,	0,
+0,	0,	0,	1,	1,	0,	0,
+1,	1,	1,	0,	0,	0,	0,
+0,	1,	0,	0,	1,	0,	0,
+1,	0,	0,	0,	0,	0,	0,
+0,	1,	0,	0,	0,	1,	1,
+1,	1,	0,	1,	1,	0,	0,
+0,	0,	1,	0,	0,	0,	0,
+1,	1,	0,	0,	1,	0,	0,
+0,	1,	0,	0,	0,	0,	0,
+1,	0,	0,	0,	0,	0,	0,
+0,	1,	0,	1,	1,	1,	1,
+1,	1,	1,	0,	0,	0,	0,
+0,	0,	0,	0,	1,	0,	0,
+1,	1,	0,	0,	0,	0,	0,
+0,	1,	0,	0,	0,	0,	0,
+1,	0,	0,	1,	1,	0,	0,
+0,	1,	1,	0,	0,	1,	1
     };
 
 // counter integer
@@ -194,34 +195,42 @@ void tickerFunc();
 
 // create ticker object
 Ticker ticker;
-
+int order[NUMTASKS]={2,5,1,3,4,6,7};
 void schedular(int count)
 {
     int frame = count % hyperperiod;
 
     int startTime = micros();
+    
 
-    if (schedule[frame * tasksInFrame + (2 - 1)] == 1)
-    {
-        task->doTask(2);
+    for (int i = 1; i <= NUMTASKS; i++){
+        int nextTask = order[i-1];
+        if (schedule[frame * tasksInFrame + (nextTask - 1)] == 1)
+        {
+            task->doTask(nextTask);
+        }
     }
-    if (schedule[frame * tasksInFrame + (5 - 1)] == 1)
-    {
-        task->doTask(5);
-    }
-    if (schedule[frame * tasksInFrame + (3 - 1)] == 1)
-    {
-        task->doTask(3);
-    }
-    if (schedule[frame * tasksInFrame + (1 - 1)] == 1)
-    {
-        task->doTask(1);
-    }
-
-    if (schedule[frame * tasksInFrame + (4 - 1)] == 1)
-    {
-        task->doTask(4);
-    }
+    // if (schedule[frame * tasksInFrame + (2 - 1)] == 1)
+    // {
+    //     task->doTask(2);
+    // }
+    // if (schedule[frame * tasksInFrame + (5 - 1)] == 1)
+    // {
+    //     task->doTask(5);
+    // }
+    // if (schedule[frame * tasksInFrame + (1 - 1)] == 1)
+    // {
+    //     task->doTask(1);
+    // }
+    // if (schedule[frame * tasksInFrame + (3 - 1)] == 1)
+    // {
+    //     task->doTask(3);
+    // }
+    // if (schedule[frame * tasksInFrame + (4 - 1)] == 1)
+    // {
+    //     task->doTask(4);
+    // }
+    
 
     // for (int i=1; i<=tasksInFrame; i++){
     //     // Serial.print (schedule[frame*tasksInFrame + i]);
@@ -259,7 +268,9 @@ void setup()
     Serial.begin(115200);
 
     // Create monitor object. No offset used currently
-    monitor = new B31DGCyclicExecutiveMonitor((49304 - 45245) - 1950);
+    //49304 - 45245) - 1950
+    
+    monitor = new B31DGCyclicExecutiveMonitor( (49331-44807)-2000 );
 
     // create object for handling tasks
     task = new tasks(monitor);

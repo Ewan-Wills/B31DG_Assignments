@@ -89,14 +89,14 @@ void tasks::task2()
 //Takes 1000uS to 1500uS 
 void tasks::task3()
 {
-    tasksDelayuS(1000);
+    tasksDelayuS(1500);
     //F1 = measureFreq(inputPinTask3);
 }
 // Measure the frequency of a 3.3v square wave signal
 //Takes 667uS to 1200uS
 void tasks::task4()
 {
-    tasksDelayuS(667);
+    tasksDelayuS(1200);
     //F2 = measureFreq(inputPinTask4);
 }
 // Call the monitor’s method doWork().
