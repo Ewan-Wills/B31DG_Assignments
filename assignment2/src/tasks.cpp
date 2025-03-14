@@ -1,4 +1,6 @@
-#include "tasks.h"
+#ifndef main_h
+#include "main.h"
+#endif
 //create a boolean to hold whether the button was already pushed in the main loop
 bool buttonAlreadyPushed;
   
@@ -23,19 +25,19 @@ tasks::tasks(B31DGCyclicExecutiveMonitor *monitor)
     pinMode(inputPinTask7, INPUT_PULLUP); // button for task 7
 }
 
-void tasks::ayncDelayMicroseconds(int numDelay){
-    vTaskDelay(pdMS_TO_TICKS(numDelay/1000));
-    //delayMicroseconds(numDelay);
-
+void tasks::tasksDelayuS(int numDelay){
+    #if program1 || edfScheduler
+        delayMicroseconds(numDelay);
+    #endif
+    #if program2
+        vTaskDelay(pdMS_TO_TICKS(numDelay/1000));
+    #endif
   }
 
 void tasks::doTask(int taskNum)
 {
-    if (taskNum<=0){Serial.println(taskNum);}
     //start the job on the monitor, run the task, then end the job on the monitor 
-    if(taskNum<=5){ _monitor->jobStarted(taskNum);}else{
-        Serial.println(taskNum);
-    }
+    if(taskNum<=5){ _monitor->jobStarted(taskNum);}
     
     switch (taskNum)
     {
@@ -56,63 +58,59 @@ void tasks::doTask(int taskNum)
 
     default: break;
     }
-    if(taskNum<=5){_monitor->jobEnded(taskNum);}else{
-        Serial.println(taskNum);
-    }
+    if(taskNum<=5){_monitor->jobEnded(taskNum);}
 }
 // Output a digital signal. This should be HIGH for 250μs, then LOW for 50μs, then HIGH again for 300μs, then LOW again.
 //Takes 600uS
 void tasks::task1()
 {
-    //ayncDelayMicroseconds(600);
+    //tasksDelayuS(600);
     digitalWrite(outputPinTask1, HIGH);
-    ayncDelayMicroseconds(250);
+    tasksDelayuS(250);
     digitalWrite(outputPinTask1, LOW);
-    ayncDelayMicroseconds(50);
+    tasksDelayuS(50);
     digitalWrite(outputPinTask1, HIGH);
-    ayncDelayMicroseconds(300);
+    tasksDelayuS(300);
     digitalWrite(outputPinTask1, LOW);
 }
 // Output a second digital signal. This should be HIGH for 100μs, then LOW for 50μs, then HIGH again for 200μs, then LOW again
 //Takes 350uS
 void tasks::task2()
 {
-    ayncDelayMicroseconds(350);
     digitalWrite(outputPinTask2, HIGH);
-    ayncDelayMicroseconds(100);
+    tasksDelayuS(100);
     digitalWrite(outputPinTask2, LOW);
-    ayncDelayMicroseconds(50);
+    tasksDelayuS(50);
     digitalWrite(outputPinTask2, HIGH);
-    ayncDelayMicroseconds(200);
+    tasksDelayuS(200);
     digitalWrite(outputPinTask2, LOW);
 }
 // Measure the frequency of a 3.3v square wave signal
 //Takes 1000uS to 1500uS 
 void tasks::task3()
 {
-    ayncDelayMicroseconds(1000);
+    tasksDelayuS(1000);
     //F1 = measureFreq(inputPinTask3);
 }
 // Measure the frequency of a 3.3v square wave signal
 //Takes 667uS to 1200uS
 void tasks::task4()
 {
-    ayncDelayMicroseconds(667);
+    tasksDelayuS(667);
     //F2 = measureFreq(inputPinTask4);
 }
 // Call the monitor’s method doWork().
 //Takes 500uS
 void tasks::task5()
 {
-    //Serial.println("task5");
-    ayncDelayMicroseconds(500);
-    //_monitor->doWork();
+    //tasksDelayuS(500);
+    _monitor->doWork();
 }
 
 // Use an LED to indicate whether the sum of the two frequencies F1 and F2 is greater than 1500
 void tasks::task6()
 {
-    //ayncDelayMicroseconds(10);
+    //tasksDelayuS(10);
     // write pin high if sum of frequencies is greater than 1500. If equal or lower, write pin low.
     digitalWrite(outputPinTask6, (F1 + F2 > 1500.0));
     // Serial.print("Sum=");
@@ -123,7 +121,7 @@ void tasks::task6()
 void tasks::task7()
 {
     //If button pressed (and wasnt already pressed since last loop), toggle led and doWork()
-    //ayncDelayMicroseconds(10);
+    //tasksDelayuS(10);
     if (digitalRead(inputPinTask7))
     {
         buttonAlreadyPushed = false;

@@ -1,6 +1,4 @@
-
-#include <Arduino.h>
-#include <B31DGMonitor.h>
+#define tasks_h
 
 //define pins 
 #define outputPinTask1 12
@@ -32,5 +30,5 @@ private:
 public:   
     tasks(B31DGCyclicExecutiveMonitor *monitor);
     void doTask(int taskNumber);
-    void ayncDelayMicroseconds(int delay_us); 
+    void tasksDelayuS(int delay_us); 
 };
