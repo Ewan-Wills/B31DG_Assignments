@@ -17,8 +17,8 @@
 class tasks
 {
 private:
-    int F1;
-    int F2;
+    double F1;
+    double F2;
     bool task7LedState;
     void task1();
     void task2();
@@ -27,7 +27,7 @@ private:
     void task5();
     void task6();
     void task7();
-    int measureFreq(int pin);    
+    double measureFreq(int pin);    
     B31DGCyclicExecutiveMonitor *_monitor;
 public:   
     tasks(B31DGCyclicExecutiveMonitor *monitor);

@@ -7,8 +7,8 @@ tasks::tasks(B31DGCyclicExecutiveMonitor *monitor)
     _monitor = monitor;
 
     // initialise F1 and F2 so task 6 can recall values from taks 3 and 4
-    this->F1 = 0;
-    this->F2 = 0;
+    this->F1 = 0.0;
+    this->F2 = 0.0;
     this->task7LedState = false;
 
 
@@ -24,20 +24,19 @@ tasks::tasks(B31DGCyclicExecutiveMonitor *monitor)
 }
 
 void tasks::ayncDelayMicroseconds(int numDelay){
-    //delay() and delayMicroseconds dont work async
-    //vTaskDelay(pdMS_TO_TICKS()); doesnt work with microseconds
-    delayMicroseconds(numDelay);
-    //use esp builtin timer to delay for set amount of time
-    // uint64_t microseconds = esp_timer_get_time();
-    // if (numDelay!=0){
-    //     while (((uint64_t) esp_timer_get_time() - microseconds) <= numDelay){}
-    // }
+    vTaskDelay(pdMS_TO_TICKS(numDelay/1000));
+    //delayMicroseconds(numDelay);
+
   }
 
 void tasks::doTask(int taskNum)
 {
+    if (taskNum<=0){Serial.println(taskNum);}
     //start the job on the monitor, run the task, then end the job on the monitor 
-    if(taskNum<=5){ _monitor->jobStarted(taskNum);}
+    if(taskNum<=5){ _monitor->jobStarted(taskNum);}else{
+        Serial.println(taskNum);
+    }
+    
     switch (taskNum)
     {
     case 1:
@@ -57,7 +56,9 @@ void tasks::doTask(int taskNum)
 
     default: break;
     }
-    if(taskNum<=5){_monitor->jobEnded(taskNum);}
+    if(taskNum<=5){_monitor->jobEnded(taskNum);}else{
+        Serial.println(taskNum);
+    }
 }
 // Output a digital signal. This should be HIGH for 250μs, then LOW for 50μs, then HIGH again for 300μs, then LOW again.
 //Takes 600uS
@@ -103,7 +104,9 @@ void tasks::task4()
 //Takes 500uS
 void tasks::task5()
 {
-    _monitor->doWork();
+    //Serial.println("task5");
+    ayncDelayMicroseconds(500);
+    //_monitor->doWork();
 }
 
 // Use an LED to indicate whether the sum of the two frequencies F1 and F2 is greater than 1500
@@ -111,7 +114,10 @@ void tasks::task6()
 {
     //ayncDelayMicroseconds(10);
     // write pin high if sum of frequencies is greater than 1500. If equal or lower, write pin low.
-    digitalWrite(outputPinTask6, (F1 + F2 > 1500));
+    digitalWrite(outputPinTask6, (F1 + F2 > 1500.0));
+    // Serial.print("Sum=");
+    // Serial.print(F1+F2);
+    // Serial.println();
 }
 // Monitor a pushbutton. Toggle the state of a second LED and call the monitor’s method doWork() whenever the pushbutton is pressed.
 void tasks::task7()
@@ -133,28 +139,34 @@ void tasks::task7()
 
 }
 
-int tasks::measureFreq(int pin)
+double tasks::measureFreq(int pin)
 {
     int startTime;
     int endTime;
-    int period;
-
+    double period;
     //if pin high, wait for pin to be low, start timer and end timer when high again. This is half the period
     if (digitalRead(pin)) { 
-        while (digitalRead(pin)); 
+        while (digitalRead(pin)){}; 
         startTime = micros();
-        while (!digitalRead(pin));
+        while (!digitalRead(pin)){};
     }
     //if pin low, wait for pin to be high, start timer and end timer when low again. This is half the period
     else{
-        while (!digitalRead(pin)); 
+        while (!digitalRead(pin)){}; 
         startTime = micros();
-        while (digitalRead(pin));
+        while (digitalRead(pin)){};
     }
 
+    //Start time =998804 End time=999518
+    endTime = micros();
+    double perioduS =(double) (2* (endTime - startTime) );
+    double freq = (1/ (((perioduS)) * (10e-7)) );
+
     // Find difference between now and start time. Since we know wave is 50% duty cycle, this (the difference) will be half of the period. Multiply by two to get the period
-    period = 2*(micros() - startTime);
 
     // return the inverse of the period (i.e. frequency). Round the frequency to integer
-    return ((int) round(1 / period));
+    // Serial.print("measurefreq:");
+    // Serial.println(freq);
+    return (freq);
+
 };
