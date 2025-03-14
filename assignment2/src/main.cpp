@@ -155,37 +155,36 @@ void loop()
 #define tickerPeriod 2000
 // copy and pasted from excel
 int schedule[(hyperperiod)*tasksInFrame] = {
-    1,	1,	0,	0,	1,	0,	0,
-0,	0,	0,	0,	0,	0,	0,
-1,	1,	0,	0,	0,	0,	0,
-0,	1,	0,	1,	1,	0,	0,
-1,	0,	1,	0,	0,	0,	0,
-0,	1,	0,	0,	1,	1,	1,
-1,	1,	0,	0,	0,	0,	0,
-0,	0,	0,	0,	0,	0,	0,
-1,	1,	0,	1,	1,	0,	0,
-0,	1,	1,	0,	0,	0,	0,
-1,	0,	0,	0,	1,	0,	0,
-0,	1,	0,	0,	0,	1,	1,
-1,	1,	0,	0,	0,	0,	0,
-0,	0,	0,	1,	1,	0,	0,
-1,	1,	1,	0,	0,	0,	0,
-0,	1,	0,	0,	1,	0,	0,
-1,	0,	0,	0,	0,	0,	0,
-0,	1,	0,	0,	0,	1,	1,
-1,	1,	0,	1,	1,	0,	0,
-0,	0,	1,	0,	0,	0,	0,
-1,	1,	0,	0,	1,	0,	0,
-0,	1,	0,	0,	0,	0,	0,
-1,	0,	0,	0,	0,	0,	0,
-0,	1,	0,	1,	1,	1,	1,
-1,	1,	1,	0,	0,	0,	0,
-0,	0,	0,	0,	1,	0,	0,
-1,	1,	0,	0,	0,	0,	0,
-0,	1,	0,	0,	0,	0,	0,
-1,	0,	0,	1,	1,	0,	0,
-0,	1,	1,	0,	0,	1,	1
-    };
+    1, 1, 0, 0, 1, 0, 0,
+    0, 0, 0, 0, 0, 0, 0,
+    1, 1, 0, 0, 0, 0, 0,
+    0, 1, 0, 1, 1, 0, 0,
+    1, 0, 1, 0, 0, 0, 0,
+    0, 1, 0, 0, 1, 1, 1,
+    1, 1, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0,
+    1, 1, 0, 1, 1, 0, 0,
+    0, 1, 1, 0, 0, 0, 0,
+    1, 0, 0, 0, 1, 0, 0,
+    0, 1, 0, 0, 0, 1, 1,
+    1, 1, 0, 0, 0, 0, 0,
+    0, 0, 0, 1, 1, 0, 0,
+    1, 1, 1, 0, 0, 0, 0,
+    0, 1, 0, 0, 1, 0, 0,
+    1, 0, 0, 0, 0, 0, 0,
+    0, 1, 0, 0, 0, 1, 1,
+    1, 1, 0, 1, 1, 0, 0,
+    0, 0, 1, 0, 0, 0, 0,
+    1, 1, 0, 0, 1, 0, 0,
+    0, 1, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 0, 0, 0,
+    0, 1, 0, 1, 1, 1, 1,
+    1, 1, 1, 0, 0, 0, 0,
+    0, 0, 0, 0, 1, 0, 0,
+    1, 1, 0, 0, 0, 0, 0,
+    0, 1, 0, 0, 0, 0, 0,
+    1, 0, 0, 1, 1, 0, 0,
+    0, 1, 1, 0, 0, 1, 1};
 
 // counter integer
 int counter;
@@ -195,64 +194,29 @@ void tickerFunc();
 
 // create ticker object
 Ticker ticker;
-int order[NUMTASKS]={2,5,1,3,4,6,7};
+int order[NUMTASKS] = {2, 5, 1, 3, 4, 6, 7};
 void schedular(int count)
 {
     int frame = count % hyperperiod;
 
     int startTime = micros();
-    
 
-    for (int i = 1; i <= NUMTASKS; i++){
-        int nextTask = order[i-1];
+    for (int i = 1; i <= NUMTASKS; i++)
+    {
+        int nextTask = order[i - 1];
         if (schedule[frame * tasksInFrame + (nextTask - 1)] == 1)
         {
             task->doTask(nextTask);
         }
     }
-    // if (schedule[frame * tasksInFrame + (2 - 1)] == 1)
-    // {
-    //     task->doTask(2);
-    // }
-    // if (schedule[frame * tasksInFrame + (5 - 1)] == 1)
-    // {
-    //     task->doTask(5);
-    // }
-    // if (schedule[frame * tasksInFrame + (1 - 1)] == 1)
-    // {
-    //     task->doTask(1);
-    // }
-    // if (schedule[frame * tasksInFrame + (3 - 1)] == 1)
-    // {
-    //     task->doTask(3);
-    // }
-    // if (schedule[frame * tasksInFrame + (4 - 1)] == 1)
-    // {
-    //     task->doTask(4);
-    // }
-    
 
-    // for (int i=1; i<=tasksInFrame; i++){
-    //     // Serial.print (schedule[frame*tasksInFrame + i]);
-    //     // Serial.print (" ");
-    //     if (schedule[frame*tasksInFrame + (i-1)] == 1){
-    //         task->doTask(i);
-    //     }
-    // }
-    int endTime = micros();
-    int excecutionTime = endTime - startTime;
-    int slackTime = tickerPeriod - excecutionTime;
-    // This prints the results for the collumn "measured excecution time in the excel sheet"
+    // int endTime = micros();
+    // int excecutionTime = endTime - startTime;
+    // int slackTime = tickerPeriod - excecutionTime;
+    // // This prints the results for the collumn "measured excecution time in the excel sheet"
     // Serial.println(excecutionTime);
-    // This prints the results for the collumn "measured slack time in the excel sheet"
+    // // This prints the results for the collumn "measured slack time in the excel sheet"
     // Serial.println(slackTime);
-
-    // when printing slackTime for the excel spreadsheet, frame 25 came out as -5 instead of 0. this is because the calculated excecution time was exactly 2000uS and real times vary slightly.
-    // if statement to not allow for negative delays
-    if (slackTime > 0)
-    {
-        // task->tasksDelayuS(slackTime);
-    }
 }
 // callback function for ticker object
 void tickerFunc()
@@ -267,10 +231,8 @@ void setup()
     // Start serial monitor so that the monitor can print its results
     Serial.begin(115200);
 
-    // Create monitor object. No offset used currently
-    //49304 - 45245) - 1950
-    
-    monitor = new B31DGCyclicExecutiveMonitor( (49331-44807)-2000 );
+    // Create monitor object. 
+    monitor = new B31DGCyclicExecutiveMonitor((49331 - 44807) - 2000);
 
     // create object for handling tasks
     task = new tasks(monitor);
@@ -283,7 +245,9 @@ void setup()
 
     Serial.println("Starting Program 1");
 
-    // for (int i = 0; i<=(hyperperiod); i++){
+    //this loop is for printing the total excecution time and the slack time  
+    // for (int i = 0; i <= (hyperperiod); i++)
+    // {
     //     schedular(i);
     // }
 }
