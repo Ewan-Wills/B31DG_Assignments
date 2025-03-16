@@ -9,9 +9,7 @@
 #define inputPinTask3 25
 #define inputPinTask4 33
 #define inputPinTask7 32
-
-
-//create 
+ 
 class tasks
 {
 private:

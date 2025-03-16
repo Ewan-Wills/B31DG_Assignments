@@ -4,7 +4,6 @@
 #define NUMTASKS 7
 // create a list to hold task deadline lengths (uS). Note: there is no deadline required for task 6 and 7 they are set to 10,000
 const int deadlineLengths[NUMTASKS] = {4000, 3000, 10000, 10000, 5000, 10000, 10000};
-TimerHandle_t myTimer[NUMTASKS];      // FreeRTOS timer handle
 B31DGCyclicExecutiveMonitor *monitor; // pointer to monitor object
 tasks *task;                          // pointer to task object
 
@@ -18,11 +17,12 @@ struct queueTask
     bool runTask;
     unsigned long timeOfDeadline;
 };
-// counter integer
-int counter;
+
 // create a list to hold all of the tasks and their time of deadlines
 queueTask queue[NUMTASKS];
 
+// counter integer
+int counter;
 // integer for schedule to hold the task with the earlieset deadline (if -1, no tasks)
 int taskToRun;
 
@@ -33,13 +33,17 @@ int getPriority();
 // create ticker object
 Ticker ticker;
 
-// function to add a task number to the queue list
+/*
+function to add a task number to the queue list
+*/
 void addToQueue(int taskNumToAdd)
 {
     // time of deadline is the current time + time to deadline. Time to deadline is deadline length- task length
     queue[taskNumToAdd - 1] = {runTask : true, timeOfDeadline : (micros() + deadlineLengths[taskNumToAdd - 1])};
 }
-// checks if counter is on a deadline (factors of 3,4,5 or 10) and adds respective tasks to queue
+/*
+checks if counter is on a deadline (factors of 3,4,5 or 10) and adds respective tasks to queue
+*/
 void updateQueue(int count)
 {
     // run task 6 and 7 every frame. This does mean if button is pushed alot it will mess up the schedule.
@@ -69,14 +73,18 @@ void updateQueue(int count)
         addToQueue(5);
     }
 }
-// callback function for ticker object
+/*
+callback function for ticker object
+*/
 void tickerFunc()
 {
     // Add one to counter and update queue
     counter++;
     updateQueue(counter);
 }
-// get the task in the queue with the soonest deadline
+/*
+get the task in the queue with the soonest deadline
+*/
 int getPriority()
 {
     // returns -1 if no tasks in queue
@@ -189,23 +197,39 @@ int schedule[(hyperperiod)*tasksInFrame] = {
 // counter integer
 int counter;
 
-// create tickerFunc and getPriority functions
+/*
+create tickerFunc and getPriority functions
+*/
 void tickerFunc();
 
 // create ticker object
 Ticker ticker;
+
+// setup the order which the tasks should run during each frame
 int order[NUMTASKS] = {2, 5, 1, 3, 4, 6, 7};
+
+/*
+run the tasks in this frame
+*/
 void schedular(int count)
 {
+    // count mod hyperperiod to get frame.
     int frame = count % hyperperiod;
 
-    int startTime = micros();
+    // get start time for calculating total execution time and slack time
+    // int startTime = micros();
 
+    // iterate through all tasks
     for (int i = 1; i <= NUMTASKS; i++)
     {
+        // get the next task from order list (note i-1 since i is the taks number and list is indexed starting 0)
         int nextTask = order[i - 1];
+        // tasks in frame is the width of the schedule table.
+        // Hence frame x tasksInFrame will bring you to the row .
+        // Therefore adding nextTask -1 will bring you to the correct collumn in that row
         if (schedule[frame * tasksInFrame + (nextTask - 1)] == 1)
         {
+            // Run that task
             task->doTask(nextTask);
         }
     }
@@ -218,7 +242,10 @@ void schedular(int count)
     // // This prints the results for the collumn "measured slack time in the excel sheet"
     // Serial.println(slackTime);
 }
-// callback function for ticker object
+
+/*
+callback function for ticker object
+*/
 void tickerFunc()
 {
     // Add one to counter and update queue
@@ -231,7 +258,7 @@ void setup()
     // Start serial monitor so that the monitor can print its results
     Serial.begin(115200);
 
-    // Create monitor object. 
+    // Create monitor object.
     monitor = new B31DGCyclicExecutiveMonitor((49331 - 44807) - 2000);
 
     // create object for handling tasks
@@ -245,11 +272,11 @@ void setup()
 
     Serial.println("Starting Program 1");
 
-    //this loop is for printing the total excecution time and the slack time  
-    // for (int i = 0; i <= (hyperperiod); i++)
-    // {
-    //     schedular(i);
-    // }
+    // this loop is for printing the total excecution time and the slack time
+    //  for (int i = 0; i <= (hyperperiod); i++)
+    //  {
+    //      schedular(i);
+    //  }
 }
 
 void loop()
@@ -257,35 +284,48 @@ void loop()
 }
 #endif
 #if program2
-// Timer callback function
+
+// List of timer handles
+TimerHandle_t myTimer[NUMTASKS];
+
+/*
+Timer callback function
+*/
 void timerCallback(TimerHandle_t xTimer)
 {
-    int param = (int)pvTimerGetTimerID(xTimer); // Retrieve the timer IparamD;
-    // Serial.println(param);
+    int param = (int)pvTimerGetTimerID(xTimer); // Retrieve the paramater of the timerhandle object;
+    // run the task
     task->doTask(param);
 }
 
 void setup()
 {
     Serial.begin(115200);
+    // create monitor with offset
     monitor = new B31DGCyclicExecutiveMonitor((49157 - 46820) - 200);
     // create object for handling tasks
     task = new tasks(monitor);
-    // activate the monitor
+
     Serial.println("Starting Program 2");
+    // activate the monitor
     monitor->startMonitoring();
-    int i = 1;
+
+    // Loop through all tasks
     for (int i = 1; i <= NUMTASKS; i++)
     {
-
-        myTimer[i - 1] = xTimerCreate(("MyTimer" + i), pdMS_TO_TICKS(deadlineLengths[i - 1] / 1000), pdTRUE, (void *)i, timerCallback);
+        // add timer object for all tasks with a period of their own deadlines (in milliseconds)
+        myTimer[i - 1] = xTimerCreate(
+            ("MyTimer" + i),
+            pdMS_TO_TICKS(deadlineLengths[i - 1] / 1000),
+            pdTRUE, (void *)i,
+            timerCallback);
 
         if (myTimer[i - 1] == NULL)
         {
             Serial.println("Failed to create timer");
         }
     }
-    // in seperate loops to reduce time between starting timers
+    // Start the timers in seperate loops to reduce time between starting each timer
     for (int i = 1; i <= NUMTASKS; i++)
     {
         // Start the timer
